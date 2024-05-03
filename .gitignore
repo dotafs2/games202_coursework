@@ -1,0 +1,17 @@
+# Ignore PDF files
+*.pdf
+
+# Ignore ICO files
+*.ico
+
+# Ignore OBJ files
+*.obj
+
+# Ignore MTL files
+*.mtl
+
+# Ignore PNG files
+*.png
+
+# Ignore lib files
+/lib/
