@@ -84,11 +84,24 @@ void uniformDiskSamples( const in vec2 randomSeed ) {
 }
 
 float findBlocker( sampler2D shadowMap,  vec2 uv, float zReceiver ) {
-	return 1.0;
+  return 0.0;
 }
 
-float PCF(sampler2D shadowMap, vec4 coords) {
-  return 1.0;
+float PCF(sampler2D shadowMap, vec4 shadowCoord, float filterSize) {
+    vec3 projCoords = shadowCoord.xyz / shadowCoord.w; // Convert to normalized device coordinates
+    projCoords = projCoords * 0.5 + 0.5; // Map to [0,1] range
+    float total_weight = 0.0;
+
+  uniformDiskSamples( projCoords.xy);
+  for (int i = 0; i < PCF_NUM_SAMPLES; i++){
+    projCoords.xy += poissonDisk[i] * filterSize;
+    float closestDepth = texture2D(shadowMap, projCoords.xy).r; // Assuming depth is stored in the red channel
+    float currentDepth = projCoords.z;
+    if(currentDepth < closestDepth + 0.005){
+      total_weight += 1.0;
+    }
+  };
+    return total_weight / float(PCF_NUM_SAMPLES);
 }
 
 float PCSS(sampler2D shadowMap, vec4 coords){
@@ -103,11 +116,14 @@ float PCSS(sampler2D shadowMap, vec4 coords){
 
 }
 
-
 float useShadowMap(sampler2D shadowMap, vec4 shadowCoord){
-  return 1.0;
+  
+    vec3 projCoords = shadowCoord.xyz / shadowCoord.w; // Convert to normalized device coordinates
+    projCoords = projCoords * 0.5 + 0.5; // Map to [0,1] range
+    float closestDepth = texture2D(shadowMap, projCoords.xy).r; // Assuming depth is stored in the red channel
+    float currentDepth = projCoords.z;
+    return (currentDepth > closestDepth + 0.01) ? 0.0 : 1.0; // Shadow test with bias
 }
-
 vec3 blinnPhong() {
   vec3 color = texture2D(uSampler, vTextureCoord).rgb;
   color = pow(color, vec3(2.2));
@@ -134,12 +150,12 @@ vec3 blinnPhong() {
 void main(void) {
 
   float visibility;
-  //visibility = useShadowMap(uShadowMap, vec4(shadowCoord, 1.0));
-  //visibility = PCF(uShadowMap, vec4(shadowCoord, 1.0));
+  // visibility = useShadowMap(uShadowMap, vPositionFromLight);
+  visibility = PCF(uShadowMap, vPositionFromLight, 0.001);
   //visibility = PCSS(uShadowMap, vec4(shadowCoord, 1.0));
 
   vec3 phongColor = blinnPhong();
 
-  //gl_FragColor = vec4(phongColor * visibility, 1.0);
-  gl_FragColor = vec4(phongColor, 1.0);
+  gl_FragColor = vec4(phongColor * visibility, 1.0);
+   // gl_FragColor = vec4(phongColor, 1.0);
 }

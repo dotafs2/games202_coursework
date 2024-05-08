@@ -17,6 +17,7 @@ function loadOBJ(renderer, path, name, objMaterial, transform) {
 		.setPath(path)
 		.load(name + '.mtl', function (materials) {
 			materials.preload();
+			setTimeout(() => {
 			new THREE.OBJLoader(manager)
 				.setMaterials(materials)
 				.setPath(path)
@@ -65,5 +66,6 @@ function loadOBJ(renderer, path, name, objMaterial, transform) {
 						}
 					});
 				}, onProgress, onError);
+			0});
 		});
 }

@@ -5,13 +5,13 @@ class DirectionalLight {
         this.mat = new EmissiveMaterial(lightIntensity, lightColor);
         this.lightPos = lightPos;
         this.focalPoint = focalPoint;
-        this.lightUp = lightUp
+        this.lightUp = lightUp;
 
         this.hasShadowMap = hasShadowMap;
         this.fbo = new FBO(gl);
         if (!this.fbo) {
             console.log("无法设置帧缓冲区对象");
-            return;
+            return; 
         }
     }
 
@@ -22,10 +22,14 @@ class DirectionalLight {
         let projectionMatrix = mat4.create();
 
         // Model transform
+        mat4.translate(modelMatrix, modelMatrix, translate);  // Apply translation
+        mat4.scale(modelMatrix, modelMatrix, scale);          // Apply scaling
+    
 
         // View transform
-    
+        viewMatrix = mat4.lookAt(viewMatrix, this.lightPos, this.focalPoint, this.lightUp);
         // Projection transform
+        projectionMatrix = mat4.ortho(projectionMatrix, -100, 100, -100, 100, 0.1, 1000);
 
         mat4.multiply(lightMVP, projectionMatrix, viewMatrix);
         mat4.multiply(lightMVP, lightMVP, modelMatrix);
